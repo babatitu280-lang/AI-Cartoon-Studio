@@ -28,8 +28,18 @@ jobs:
 
       - name: Run studio checks
         run: python -m studio.check
-        
+
       - name: Test episode script
         run: python -m studio.test_script
-      - name: Test episode script
-        run: python -m studio.test_script
+
+      - name: Test drawing
+        run: python -m studio.test_drawing
+
+      - name: Test video builder
+        run: python -m studio.test_video_builder
+
+      - name: Save test animation
+        uses: actions/upload-artifact@v4
+        with:
+          name: cartoon-test-video
+          path: test_animation.mp4
