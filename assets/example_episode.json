@@ -1,0 +1,77 @@
+{
+  "title": "The Giant Biscuit",
+  "scenes": [
+    {
+      "name": "The Discovery",
+      "duration": 60,
+      "actions": [
+        {
+          "character": "bobo",
+          "movement": "notice_biscuit"
+        },
+        {
+          "character": "rexy",
+          "movement": "sneak_towards_biscuit"
+        }
+      ],
+      "sounds": [
+        {
+          "sound": "tiny_footsteps",
+          "start": 2
+        },
+        {
+          "sound": "comedic_suspense",
+          "start": 10
+        }
+      ]
+    },
+    {
+      "name": "The Biscuit Battle",
+      "duration": 60,
+      "actions": [
+        {
+          "character": "bobo",
+          "movement": "grab_biscuit"
+        },
+        {
+          "character": "rexy",
+          "movement": "pull_biscuit"
+        }
+      ],
+      "sounds": [
+        {
+          "sound": "scrambling",
+          "start": 5
+        },
+        {
+          "sound": "cartoon_impact",
+          "start": 30
+        }
+      ]
+    },
+    {
+      "name": "The Surprise",
+      "duration": 60,
+      "actions": [
+        {
+          "character": "bobo",
+          "movement": "fall_backwards"
+        },
+        {
+          "character": "rexy",
+          "movement": "look_surprised"
+        }
+      ],
+      "sounds": [
+        {
+          "sound": "falling_whoosh",
+          "start": 12
+        },
+        {
+          "sound": "comedic_bounce",
+          "start": 20
+        }
+      ]
+    }
+  ]
+}
