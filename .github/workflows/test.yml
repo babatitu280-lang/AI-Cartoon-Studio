@@ -31,3 +31,5 @@ jobs:
         
       - name: Test episode script
         run: python -m studio.test_script
+      - name: Test episode script
+        run: python -m studio.test_script
