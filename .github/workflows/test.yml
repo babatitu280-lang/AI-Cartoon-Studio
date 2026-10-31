@@ -28,3 +28,6 @@ jobs:
 
       - name: Run studio checks
         run: python -m studio.check
+        
+      - name: Test episode script
+        run: python -m studio.test_script
