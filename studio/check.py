@@ -36,7 +36,7 @@ def run_checks():
             actions=scene.actions,
             sounds=[
                 SoundCue(
-                    sound=sound.filename,
+                    sound=sound.sound,
                     start=sound.start,
                 )
                 for sound in scene.sounds
