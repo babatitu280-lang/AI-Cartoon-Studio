@@ -1,4 +1,3 @@
-
 name: AI Cartoon Studio
 
 on:
@@ -44,6 +43,9 @@ jobs:
       - name: Test video builder
         run: python -m studio.test_video_builder
 
+      - name: Test character compositor
+        run: python -m studio.test_compositor
+
       - name: Render 3D kitchen
         run: |
           blender --background --python studio/create_kitchen.py
@@ -55,5 +57,3 @@ jobs:
           path: |
             test_animation.mp4
             /tmp/cartoon_kitchen.png
-
-
