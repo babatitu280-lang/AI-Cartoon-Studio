@@ -14,10 +14,14 @@ EPISODE = {
     "dialogue": False
 }
 
-ANIMATION = {
-    "style": "polished_2d",
-    "use_3d": False,
-    "character_assets_reusable": True
+VISUALS = {
+    "character_style": "polished_2d",
+    "environment_style": "3d",
+    "environment_engine": "blender",
+    "character_rendering": "transparent_2d_assets",
+    "compositing": True,
+    "reusable_character_assets": True,
+    "reusable_3d_environments": True
 }
 
 AUDIO = {
