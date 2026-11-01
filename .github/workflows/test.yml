@@ -1,14 +1,13 @@
 
-name: AI Cartoon Studio Tests
+name: AI Cartoon Studio
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +19,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -29,9 +28,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg blender
-
-      - name: Verify Blender
-        run: blender --version
 
       - name: Check Python files
         run: python -m compileall -q studio
@@ -48,9 +44,16 @@ jobs:
       - name: Test video builder
         run: python -m studio.test_video_builder
 
-      - name: Save test animation
+      - name: Render 3D kitchen
+        run: |
+          blender --background --python studio/create_kitchen.py
+
+      - name: Save generated videos and 3D scene
         uses: actions/upload-artifact@v4
         with:
-          name: cartoon-test-video
-          path: test_animation.mp4
+          name: cartoon-studio-prototype
+          path: |
+            test_animation.mp4
+            /tmp/cartoon_kitchen.png
+
 
