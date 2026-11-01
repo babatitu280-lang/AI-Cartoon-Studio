@@ -53,6 +53,9 @@ jobs:
       - name: Test frame renderer
         run: python -m studio.test_frame_renderer
 
+      - name: Test scene animator
+        run: python -m studio.test_scene_animator
+
       - name: Render 3D kitchen
         run: blender --background --python studio/create_kitchen.py
 
