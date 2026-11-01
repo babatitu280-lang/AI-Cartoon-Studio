@@ -1,3 +1,4 @@
+
 name: AI Cartoon Studio
 
 on:
@@ -58,6 +59,9 @@ jobs:
 
       - name: Test video exporter
         run: python -m studio.test_video_exporter
+
+      - name: Test audio mixer
+        run: python -m studio.test_audio_mixer
 
       - name: Render 3D kitchen
         run: blender --background --python studio/create_kitchen.py
