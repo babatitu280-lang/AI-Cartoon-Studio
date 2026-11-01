@@ -47,6 +47,8 @@ jobs:
         run: python -m studio.test_compositor
       - name: Test character animation
         run: python -m studio.test_character_animation
+      - name: Test frame renderer
+        run: python -m studio.test_frame_renderer
       - name: Render 3D kitchen
         run: |
           blender --background --python studio/create_kitchen.py
