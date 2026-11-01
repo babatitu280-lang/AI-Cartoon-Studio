@@ -63,6 +63,9 @@ jobs:
       - name: Test audio mixer
         run: python -m studio.test_audio_mixer
 
+      - name: Test final video
+        run: python -m studio.test_final_video
+
       - name: Render 3D kitchen
         run: blender --background --python studio/create_kitchen.py
 
