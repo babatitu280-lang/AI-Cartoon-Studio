@@ -1,11 +1,36 @@
 
+import math
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 from studio.asset_registry import get_character_asset
-from studio.character_animation import Keyframe
-from studio.scene_animator import render_scene_animation
+from studio.character_animation import Keyframe, animate_character
+
+
+def paste_character(background, character_path, keyframes, current_time):
+    character = Image.open(character_path).convert("RGBA")
+    motion = animate_character(keyframes, current_time)
+
+    width = max(1, round(character.width * motion["scale_x"]))
+    height = max(1, round(character.height * motion["scale_y"]))
+
+    character = character.resize(
+        (width, height), Image.Resampling.LANCZOS
+    )
+    character = character.rotate(
+        motion["rotation"],
+        resample=Image.Resampling.BICUBIC,
+        expand=True,
+    )
+
+    background.alpha_composite(
+        character,
+        (round(motion["x"]), round(motion["y"])),
+    )
 
 
 def build_test_video(output_path="test_animation.mp4"):
@@ -13,74 +38,59 @@ def build_test_video(output_path="test_animation.mp4"):
     if not ffmpeg:
         raise RuntimeError("FFmpeg is not installed.")
 
-    root = Path(__file__).resolve().parent.parent
-
     bobo = get_character_asset("bobo", "bobo.png")
     rexy = get_character_asset("rexy", "rexy.png")
 
-    background = root / "assets" / "backgrounds" / "test_background.png"
-    if not background.is_file():
-        raise FileNotFoundError(
-            f"Background image not found: {background}"
-        )
+    fps = 24
+    duration = 5
+    total_frames = fps * duration
+
+    bobo_keys = [
+        Keyframe(0, 250, 500),
+        Keyframe(2.5, 800, 450, rotation=8),
+        Keyframe(5, 1100, 500),
+    ]
+
+    rexy_keys = [
+        Keyframe(0, 1300, 500),
+        Keyframe(2.5, 1000, 500, rotation=-8),
+        Keyframe(5, 750, 500),
+    ]
 
     output_path = Path(output_path).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    import tempfile
-
     with tempfile.TemporaryDirectory() as temp:
-        frame_dir = Path(temp) / "frames"
+        frame_dir = Path(temp)
 
-        bobo_frames = render_scene_animation(
-            background,
-            bobo,
-            [
-                Keyframe(0, 250, 500),
-                Keyframe(2.5, 800, 450, rotation=8),
-                Keyframe(5, 1100, 500),
-            ],
-            frame_dir / "bobo",
-            duration=5,
-            fps=24,
-        )
+        for frame_number in range(total_frames):
+            current_time = frame_number / fps
 
-        # Render Rexy separately, then composite both characters
-        # into the same background for each output frame.
-        rexy_frames = render_scene_animation(
-            background,
-            rexy,
-            [
-                Keyframe(0, 1300, 500),
-                Keyframe(2.5, 1000, 500, rotation=-8),
-                Keyframe(5, 750, 500),
-            ],
-            frame_dir / "rexy",
-            duration=5,
-            fps=24,
-        )
+            background = Image.new(
+                "RGBA", (1920, 1080), (150, 205, 235, 255)
+            )
+            draw = ImageDraw.Draw(background)
+            draw.rectangle(
+                (0, 750, 1920, 1080),
+                fill=(105, 165, 95, 255),
+            )
 
-        from PIL import Image
+            paste_character(
+                background, bobo, bobo_keys, current_time
+            )
+            paste_character(
+                background, rexy, rexy_keys, current_time
+            )
 
-        combined_dir = frame_dir / "combined"
-        combined_dir.mkdir(parents=True, exist_ok=True)
-
-        for index, (bobo_frame, rexy_frame) in enumerate(
-            zip(bobo_frames, rexy_frames)
-        ):
-            image = Image.open(bobo_frame).convert("RGBA")
-            rexy_image = Image.open(rexy_frame).convert("RGBA")
-            image.alpha_composite(rexy_image)
-
-            image.convert("RGB").save(
-                combined_dir / f"frame_{index:06d}.png"
+            background.convert("RGB").save(
+                frame_dir / f"frame_{frame_number:06d}.png"
             )
 
         subprocess.run(
             [
                 ffmpeg, "-y",
-                "-framerate", "24",
-                "-i", str(combined_dir / "frame_%06d.png"),
+                "-framerate", str(fps),
+                "-i", str(frame_dir / "frame_%06d.png"),
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
                 "-movflags", "+faststart",
