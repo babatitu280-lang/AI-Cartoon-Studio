@@ -1,57 +1,92 @@
-import math
+
 import shutil
 import subprocess
-import tempfile
 from pathlib import Path
 
-from studio.drawing import create_frame, draw_character
+from studio.asset_registry import get_character_asset
+from studio.character_animation import Keyframe
+from studio.scene_animator import render_scene_animation
 
 
 def build_test_video(output_path="test_animation.mp4"):
     ffmpeg = shutil.which("ffmpeg")
-
     if not ffmpeg:
         raise RuntimeError("FFmpeg is not installed.")
 
-    fps = 24
-    duration = 5
-    total_frames = fps * duration
+    root = Path(__file__).resolve().parent.parent
+
+    bobo = get_character_asset("bobo", "bobo.png")
+    rexy = get_character_asset("rexy", "rexy.png")
+
+    background = root / "assets" / "backgrounds" / "test_background.png"
+    if not background.is_file():
+        raise FileNotFoundError(
+            f"Background image not found: {background}"
+        )
+
+    output_path = Path(output_path).resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    import tempfile
 
     with tempfile.TemporaryDirectory() as temp:
-        frame_dir = Path(temp)
+        frame_dir = Path(temp) / "frames"
 
-        for frame_number in range(total_frames):
-            t = frame_number / total_frames
+        bobo_frames = render_scene_animation(
+            background,
+            bobo,
+            [
+                Keyframe(0, 250, 500),
+                Keyframe(2.5, 800, 450, rotation=8),
+                Keyframe(5, 1100, 500),
+            ],
+            frame_dir / "bobo",
+            duration=5,
+            fps=24,
+        )
 
-            image = create_frame()
+        # Render Rexy separately, then composite both characters
+        # into the same background for each output frame.
+        rexy_frames = render_scene_animation(
+            background,
+            rexy,
+            [
+                Keyframe(0, 1300, 500),
+                Keyframe(2.5, 1000, 500, rotation=-8),
+                Keyframe(5, 750, 500),
+            ],
+            frame_dir / "rexy",
+            duration=5,
+            fps=24,
+        )
 
-            bobo_x = int(350 + 500 * t)
-            rexy_x = int(1250 - 350 * t)
+        from PIL import Image
 
-            bounce = abs(math.sin(t * math.pi * 6)) * 35
+        combined_dir = frame_dir / "combined"
+        combined_dir.mkdir(parents=True, exist_ok=True)
 
-            draw_character(
-                image, "bobo", bobo_x, int(650 - bounce)
-            )
-            draw_character(
-                image, "rexy", rexy_x, 650, 0.8
-            )
+        for index, (bobo_frame, rexy_frame) in enumerate(
+            zip(bobo_frames, rexy_frames)
+        ):
+            image = Image.open(bobo_frame).convert("RGBA")
+            rexy_image = Image.open(rexy_frame).convert("RGBA")
+            image.alpha_composite(rexy_image)
 
-            image.save(
-                frame_dir / f"frame_{frame_number:06d}.png"
+            image.convert("RGB").save(
+                combined_dir / f"frame_{index:06d}.png"
             )
 
         subprocess.run(
             [
                 ffmpeg, "-y",
-                "-framerate", str(fps),
-                "-i", str(frame_dir / "frame_%06d.png"),
+                "-framerate", "24",
+                "-i", str(combined_dir / "frame_%06d.png"),
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
                 "-movflags", "+faststart",
-                str(Path(output_path).resolve())
+                str(output_path),
             ],
-            check=True
+            check=True,
         )
 
-    return output_path
+    return str(output_path)
